@@ -1,4 +1,4 @@
-import { Button, Frog, TextInput } from 'frog'
+import { Button, Frog, parseEther, TextInput } from 'frog'
 import { devtools } from 'frog/dev'
 // import { neynar } from 'frog/hubs'
 import { handle } from 'frog/next'
@@ -9,7 +9,6 @@ import { MemorySaver } from "@langchain/langgraph";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { STORY } from './story.js';
-import { colors } from 'frog/ui';
 
 // Uncomment to use Edge Runtime.
 // export const config = {
@@ -38,7 +37,8 @@ const agent = createReactAgent({
 });
 
 type State = {   
-  agentMsg: string
+  agentMsg: string,
+  win: boolean,
 }
 
 export const app = new Frog<{ State: State }>({
@@ -49,7 +49,8 @@ export const app = new Frog<{ State: State }>({
   // hub: neynar({ apiKey: 'NEYNAR_FROG_FM' })
   title: 'Raf MafAI',
   initialState: {
-    agentMsg: 'Welcome to the Giraffe World, where towering necks hold heavy crowns. Before we begin, let me ask—were you the runt of your pack, or were you always standing tall?'
+    agentMsg: 'Welcome to the Giraffe World, where towering necks hold heavy crowns. Before we begin, let me ask—were you the runt of your pack, or were you always standing tall?',
+    win: false
   }
 })
 
@@ -64,8 +65,11 @@ app.frame('/', async (c) => {
           { messages: [humanMessage] },
           { configurable: { thread_id: '5' } },
         );
-        console.log(agentFinalState.messages[agentFinalState.messages.length - 1].content);
-        previousState.agentMsg = agentFinalState.messages[agentFinalState.messages.length - 1].content;
+        const content = agentFinalState.messages[agentFinalState.messages.length - 1].content;
+        previousState.agentMsg = content;
+        if (content.includes('$RAF')) {
+          previousState.win = true;
+        }
       } catch (error) {
         console.error(error);
         previousState.agentMsg = 'Sorry, I am not able to respond to that.';
@@ -99,7 +103,7 @@ app.frame('/', async (c) => {
         <div
           style={{
             color: 'black',
-            fontSize: state.agentMsg.length > 250 ? 11 : 13,
+            fontSize: state.agentMsg.length > 400 ? 9 : 11,
             fontWeight: 500,
             backgroundColor: 'white',
             padding: '15px',
@@ -126,10 +130,17 @@ app.frame('/', async (c) => {
     intents: [
       <TextInput placeholder="Your question/answer..." />,
       <Button value="send">Send</Button>,
-      status !== 'response' && <Button value="start">Start</Button>,
-      status === 'response' && <Button.Reset>Restart</Button.Reset>,
-      <Button value='test'>{status}</Button>
+      status === 'initial' && <Button value="start">Start</Button>,
+      state.win && <Button.Transaction target="/send-ether">Claim Prize</Button.Transaction>,
     ],
+  })
+})
+
+app.transaction('/send-ether', (c) => {
+  return c.send({
+    chainId: 'eip155:11155111',
+    to: '0x0414DDBf69294B1eE580eEf88862dEa94B726A07',
+    value: parseEther('0.001'),
   })
 })
 

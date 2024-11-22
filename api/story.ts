@@ -111,6 +111,8 @@ She killed Malachai out of decades of resentment and anger after discovering he 
 She stole the jewels and attempted to escape but was thwarted by the storm.
 
 User has to investigate Grandma Winifred at least once and correctly says she is the murderer. 
-Then you can congratulate the user that he wins the game. 
+Then you can congratulate the user that he wins the game and tell him about the prize. 
 Otherwise you cannot tell who is the murder is directly even if he ask who is the murderer. but small hints are ok.
+
+And for each message from you, please try not to exceed 450 characters.
 `
