@@ -24,7 +24,7 @@ const getPrize = tool(() => {
   return '$RAF'
 }, {
   name: 'get_prize',
-  description: 'Tells user what is the prize after the user successfully guesses the murderer',
+  description: 'Tells user what is the prize after the user gets the personality result',
 })
 
 const tools = [getPrize];
@@ -49,7 +49,7 @@ export const app = new Frog<{ State: State }>({
   // hub: neynar({ apiKey: 'NEYNAR_FROG_FM' })
   title: 'Raf MafAI',
   initialState: {
-    agentMsg: 'Welcome to the Giraffe World, where towering necks hold heavy crowns. Before we begin, let me ask—were you the runt of your pack, or were you always standing tall?',
+    agentMsg: 'Welcome to the Giraffe World, where towering necks hold heavy crowns. Do you wanna know which kind of Giraffe you are?',
     win: false
   }
 })
@@ -60,7 +60,7 @@ app.frame('/', async (c) => {
   const state = await deriveState(async previousState => {
     if (buttonValue === 'start' || inputText) {
       try {
-        const humanMessage = buttonValue === 'start' ? new HumanMessage("Ok, let us play the game, tell me who I am and what happend?") : new HumanMessage(inputText!);
+        const humanMessage = buttonValue === 'start' ? new HumanMessage("Ok, let's start") : new HumanMessage(inputText!);
         const agentFinalState = await agent.invoke(
           { messages: [humanMessage] },
           { configurable: { thread_id: '5' } },
@@ -115,23 +115,13 @@ app.frame('/', async (c) => {
         >
           { state.agentMsg }
         </div>
-        <img 
-          src='/bubble.svg'
-          width={112}
-          height={57}
-          style={{
-            position: 'absolute',
-            left: '220px',
-            transform: 'translateX(-200px)',
-          }}
-        />
       </div>
     ),
     intents: [
       <TextInput placeholder="Your question/answer..." />,
-      <Button value="send">Send</Button>,
-      status === 'initial' && <Button value="start">Start</Button>,
-      state.win && <Button.Transaction target="/send-ether">Claim Prize</Button.Transaction>,
+      status !== 'initial' && <Button value="send">Send</Button>,
+      status === 'initial' && <Button value="start">Yes</Button>,
+      state.win && <Button.Transaction target="/send-ether">Mint Your RAF</Button.Transaction>,
     ],
   })
 })
