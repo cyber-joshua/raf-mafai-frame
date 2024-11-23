@@ -8,7 +8,7 @@ import { tool } from "@langchain/core/tools";
 import { MemorySaver } from "@langchain/langgraph";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
-import { STORY } from './story.js';
+import { STORY, STORY2 } from './story.js';
 
 // Uncomment to use Edge Runtime.
 // export const config = {
@@ -21,13 +21,21 @@ const agentModel = new ChatOpenAI({
 });
 
 const getPrize = tool(() => {
-  return '$RAF'
+  return '$RAFNFT';
 }, {
   name: 'get_prize',
   description: 'Tells user what is the prize after the user gets the personality result',
 })
 
+const getPrize2 = tool(() => {
+  return '$RAF';
+}, {
+  name: 'get_prize',
+  description: 'Tells user what is the prize after the user guesses the murderer correctly',
+})
+
 const tools = [getPrize];
+const tools2 = [getPrize2];
 const agentCheckpointer = new MemorySaver();
 const agent = createReactAgent({
   llm: agentModel,
@@ -36,9 +44,19 @@ const agent = createReactAgent({
   messageModifier: new SystemMessage(STORY),
 });
 
+const agent2 = createReactAgent({
+  llm: agentModel,
+  tools: tools2,
+  checkpointSaver: agentCheckpointer,
+  messageModifier: new SystemMessage(STORY2),
+});
+
 type State = {   
   agentMsg: string,
   win: boolean,
+  prize: boolean,
+  threadId: string,
+  gameStarted: boolean,
 }
 
 export const app = new Frog<{ State: State }>({
@@ -50,30 +68,61 @@ export const app = new Frog<{ State: State }>({
   title: 'Raf MafAI',
   initialState: {
     agentMsg: 'Welcome to the Giraffe World, where towering necks hold heavy crowns. Do you wanna know which kind of Giraffe you are?',
-    win: false
+    win: false,
+    prize: false,
+    threadId: '',
+    gameStarted: false,
   }
 })
 
 app.frame('/', async (c) => {
-  const { buttonValue, inputText, status, deriveState, transactionId } = c
+  const { buttonValue, inputText, status, deriveState, previousState: pstate } = c
 
-  const minted = !!transactionId;
+  const minted = pstate?.win;
   const state = await deriveState(async previousState => {
-    if (buttonValue === 'start' || inputText) {
-      try {
-        const humanMessage = buttonValue === 'start' ? new HumanMessage("Ok, let's start") : new HumanMessage(inputText!);
-        const agentFinalState = await agent.invoke(
-          { messages: [humanMessage] },
-          { configurable: { thread_id: '5' } },
-        );
-        const content = agentFinalState.messages[agentFinalState.messages.length - 1].content;
-        previousState.agentMsg = content;
-        if (content.includes('$RAF')) {
-          previousState.win = true;
+    if (minted) {
+      if (!previousState.gameStarted) {
+        previousState.agentMsg = "Don't leave yet! Something happened!! Solve the mystery to get more prizes!";
+        previousState.threadId = new Date().getTime().toString();
+      } 
+      if (buttonValue === 'startGame' || inputText) {
+        try {
+          const humanMessage = buttonValue === 'startGame' ? new HumanMessage("Ok, Tell me who I am and what happened?") : new HumanMessage(inputText!);
+          const agentFinalState = await agent2.invoke(
+            { messages: [humanMessage] },
+            { configurable: { thread_id: previousState.threadId } },
+          );
+          const content = agentFinalState.messages[agentFinalState.messages.length - 1].content;
+          previousState.gameStarted = true;
+          previousState.agentMsg = content;
+          if (content.includes('$RAF')) {
+            previousState.prize = true;
+          }
+        } catch (error) {
+          console.error(error);
+          previousState.agentMsg = 'Sorry, I am not able to respond to that.';
         }
-      } catch (error) {
-        console.error(error);
-        previousState.agentMsg = 'Sorry, I am not able to respond to that.';
+      }
+    } else {
+      if (buttonValue === 'start' || inputText) {
+        try {
+          const humanMessage = buttonValue === 'start' ? new HumanMessage("Ok, let's start") : new HumanMessage(inputText!);
+          if (buttonValue === 'start') {
+            previousState.threadId = new Date().getTime().toString();
+          }
+          const agentFinalState = await agent.invoke(
+            { messages: [humanMessage] },
+            { configurable: { thread_id: previousState.threadId } },
+          );
+          const content = agentFinalState.messages[agentFinalState.messages.length - 1].content;
+          previousState.agentMsg = content;
+          if (content.includes('$RAFNFT')) {
+            previousState.win = true;
+          }
+        } catch (error) {
+          console.error(error);
+          previousState.agentMsg = 'Sorry, I am not able to respond to that.';
+        }
       }
     }
   })
@@ -107,7 +156,7 @@ app.frame('/', async (c) => {
         <div
           style={{
             color: 'black',
-            fontSize: state.agentMsg.length > 400 ? 13 : 15,
+            fontSize: state.agentMsg.length > 400 ? 15 : state.agentMsg.length > 250 ? 17 : 20,
             fontWeight: 500,
             backgroundColor: 'rgba(255, 255, 255, 0.7)',
             padding: '15px',
@@ -140,7 +189,9 @@ app.frame('/', async (c) => {
       <TextInput placeholder="Your question/answer..." />,
       status !== 'initial' && <Button value="send">Send</Button>,
       status === 'initial' && <Button value="start">Yes</Button>,
-      state.win && <Button.Transaction target="/send-ether">Mint Your RAF</Button.Transaction>,
+      state.win && !minted && <Button.Transaction target="/send-ether">Mint Your RAF</Button.Transaction>,
+      minted && !state.gameStarted && <Button value="startGame">Start Game</Button>,
+      minted && state.prize && <Button.Transaction target="/send-ether">Claim Prize</Button.Transaction>
     ],
   })
 })
