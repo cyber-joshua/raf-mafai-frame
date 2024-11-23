@@ -44,7 +44,7 @@ type State = {
 export const app = new Frog<{ State: State }>({
   assetsPath: '/',
   basePath: '/api',
-  imageOptions: { height: 760, width: 456 },
+  imageOptions: { height: 456, width: 760 },
   // Supply a Hub to enable frame verification.
   // hub: neynar({ apiKey: 'NEYNAR_FROG_FM' })
   title: 'Raf MafAI',
@@ -55,8 +55,9 @@ export const app = new Frog<{ State: State }>({
 })
 
 app.frame('/', async (c) => {
-  const { buttonValue, inputText, status, deriveState } = c
+  const { buttonValue, inputText, status, deriveState, transactionId } = c
 
+  const minted = !!transactionId;
   const state = await deriveState(async previousState => {
     if (buttonValue === 'start' || inputText) {
       try {
@@ -77,43 +78,61 @@ app.frame('/', async (c) => {
     }
   })
 
+  const wrapperStyle: any = {
+    alignItems: 'flex-end',
+    display: 'flex',
+    height: '456px',
+    width: '760px',
+    backgroundSize: '100% 100%',
+  }
+  if (minted) {
+    wrapperStyle.backgroundImage = 'url(https://images.squarespace-cdn.com/content/v1/608164c98d4fc466c981a18c/0c891230-9051-42e2-9da0-b73a5d474676/action-scene-in-movie.jpg)';
+  } else {
+    wrapperStyle.backgroundColor = '#A2E3F2';
+  }
+
   return c.res({
     image: (
       <div
-        style={{
-          alignItems: 'center',
-          position: 'relative',
-          display: 'flex',
-          height: '100%',
-          width: '100%',
-          justifyContent: 'center',
-        }}
+        style={wrapperStyle}
       >
         <img
-          src='/raf.png'
+          src={minted ? '/hitman.png' : '/accountant.png'}
+          width={200}
+          height={200}
           style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
+            marginBottom: '30px',
           }}
         />
         <div
           style={{
             color: 'black',
-            fontSize: state.agentMsg.length > 400 ? 9 : 11,
+            fontSize: state.agentMsg.length > 400 ? 13 : 15,
             fontWeight: 500,
-            backgroundColor: 'white',
+            backgroundColor: 'rgba(255, 255, 255, 0.7)',
             padding: '15px',
+            marginRight: '50px',
             whiteSpace: 'pre-wrap',
-            width: '250px',
+            flex: 'auto',
             borderRadius: '16px',
-            transform: 'translateX(80px)',
+            marginBottom: '100px',
+            display: 'flex',
+            transform: 'translateX(-30px)',
+            position: 'relative',
           }}
         >
           { state.agentMsg }
+          <img 
+            src="/bubble.png" 
+            style={{
+              position: 'absolute',
+              left: '-6px',
+              bottom: '-3px',
+              width: '40px',
+              height: '22px',
+              opacity: '0.8',
+            }}
+          />
         </div>
       </div>
     ),
