@@ -141,11 +141,9 @@ app.frame('/', async (c) => {
     height: '456px',
     width: '760px',
     backgroundSize: '100% 100%',
-  }
-  if (minted) {
-    wrapperStyle.backgroundImage = 'url(https://images.squarespace-cdn.com/content/v1/608164c98d4fc466c981a18c/0c891230-9051-42e2-9da0-b73a5d474676/action-scene-in-movie.jpg)';
-  } else {
-    wrapperStyle.backgroundColor = '#A2E3F2';
+    backgroundImage: minted ? 
+      'url(https://c8dvsbhbfg9spccn.public.blob.vercel-storage.com/action-scene-in-movie-min-l4ctYADGBk2qdYP2rvQsuEwV5HsU5B.jpg)' : 
+      'url(https://c8dvsbhbfg9spccn.public.blob.vercel-storage.com/Hitman--t2B4vpcD6XuHw47wPQreg1bBqtnGuR.jpg)',
   }
 
   return c.res({
@@ -164,7 +162,7 @@ app.frame('/', async (c) => {
         <div
           style={{
             color: 'black',
-            fontSize: state.agentMsg.length > 400 ? 15 : state.agentMsg.length > 250 ? 17 : 20,
+            fontSize: state.agentMsg.length > 400 ? 16 : state.agentMsg.length > 250 ? 17 : 20,
             fontWeight: 500,
             backgroundColor: 'rgba(255, 255, 255, 0.7)',
             padding: '15px',
@@ -184,10 +182,10 @@ app.frame('/', async (c) => {
             style={{
               position: 'absolute',
               left: '-6px',
-              bottom: '-3px',
+              bottom: '-5px',
               width: '40px',
               height: '22px',
-              opacity: '0.8',
+              opacity: '1',
             }}
           />
         </div>
