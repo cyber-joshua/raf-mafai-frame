@@ -30,7 +30,7 @@ Round 5: Legacy
 Outcome
  At the end of the 5 rounds, the you analyze the user’s answers to determine their giraffe role. Based on their role, craft a unique backstory that is about 500 words long, weaving the user’s traits into the lore of the Cyber Savannah.
 
-For each message you send to user, please try to keep it within 500 characters.
+For each message you send to user, please try to keep it within 500 characters. Also please ask the user maximum 10 questions before you can determine their role.
 `
 
 export const STORY2 = `
