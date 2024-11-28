@@ -68,7 +68,7 @@ export const app = new Frog<{ State: State }>({
   // hub: neynar({ apiKey: 'NEYNAR_FROG_FM' })
   title: 'Raf MafAI',
   initialState: {
-    agentMsg: 'Welcome to Raf MafAI, a story-driven social experience where you’ll uncover your role in the shadowy world of the Cyber Savannah. The Raf Mafia, a powerful group of giraffe gangsters, rules the land with towering influence. Through your interactions, you’ll discover the type of giraffe you’d be in this world, culminating in a unique backstory crafted just for you.',
+    agentMsg: 'Welcome to Raf MafAI! Let me ask you some questions to see what kind of Raf you are!',
     win: false,
     prize: false,
     threadId: '',
